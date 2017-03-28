@@ -32,6 +32,7 @@ private:
     
     ofxPanel panel;
     ofParameter<float>	panelFPS;
+    ofParameter<int>	blobs;
     bool showPanel;
     
     ofxCvColorImage rgb, hsb;
@@ -55,6 +56,9 @@ private:
     
     ofParameter<bool> showVideo;
     ofParameter<bool> showTarget;
+    ofParameter<bool> showBall;
+    ofParameter<bool> mirror;
+    ofParameter<float> zoomPct;
 
     
 //    bool inRange(ofColor c, ofColor lower, ofColor upper);
@@ -66,5 +70,6 @@ private:
     
     void drawVideo();
     void drawTarget();
+    void drawBall();
     void drawPanel();
 };

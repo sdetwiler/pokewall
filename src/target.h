@@ -13,6 +13,7 @@
 
 enum State
 {
+    Reload,
     Initial,
     Entering,
     Idle,
@@ -34,6 +35,11 @@ public:
     bool test(int screenX, int screenY);
     
 private:
+    
+    void loadRandom();
+    void reload();
+    
+    void updateReload();
     void updateInitial();
     void updateEntering();
     void updateIdle();
@@ -44,6 +50,8 @@ private:
     void setState(State state);
     
     ofImage mImage;
+    ofSoundPlayer mSound;
+
     
     float mWidth;
     float mHeight;

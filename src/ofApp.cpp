@@ -42,8 +42,12 @@ void ofApp::setupPanel()
     
     panel.add(showVideo.set("Show Video", false));
     panel.add(showTarget.set("Show Target", false));
+    panel.add(showBall.set("Show Ball", false));
+    panel.add(mirror.set("Mirror Video", false));
     
     panel.add(panelFPS.set("FPS", 0, 0, 60));
+    panel.add(blobs.set("Blobs", 0, 0, 60));
+    panel.add(zoomPct.set("Zoom pct", .5, .1, 1));
 
     for(int d = 0; d < kinects.size(); d++){
         panel.add(kinects[d]->params);
@@ -67,6 +71,8 @@ void ofApp::setup(){
     
     setupKinect();
     setupPanel();
+    
+    findHue = 178;  // Red ball.
     
     showVideo = false;
     showTarget = false;
@@ -102,20 +108,33 @@ void ofApp::update(){
         kinect->update();
         if(kinect->isFrameNew())
         {
+            float sw = w * zoomPct;
+            float sh = float(h)/float(w) * sw;
+            
+            float x = (w - sw)/2;
+            float y = (h - sh)/2;
+            rgb.setROI(x,0,sw,sh);
+
             //copy webcam pixels to rgb image
             rgb.setFromPixels(kinect->getRgbPixels());
             
             //mirror horizontal
-//            rgb.mirror(false, true);
+            if(mirror)
+            {
+                rgb.mirror(false, true);
+            }
             
             
             //duplicate rgb
+            hsb.setROI(rgb.getROI());
             hsb = rgb;
             
             //convert to hsb
             hsb.convertRgbToHsv();
             
-            
+            hue.setROI(hsb.getROI());
+            sat.setROI(hsb.getROI());
+            bri.setROI(hsb.getROI());
             //store the three channels as grayscale images
             hsb.convertToGrayscalePlanarImages(hue, sat, bri);
             
@@ -123,18 +142,23 @@ void ofApp::update(){
             for (int i=0; i<w*h; i++) {
                 filtered.getPixels()[i] = ofInRange(hue.getPixels()[i],findHue-5,findHue+5) ? 255 : 0;
             }
+            filtered.setROI(hue.getROI());
             filtered.flagImageChanged();
+            
             
             //run the contour finder on the filtered image to find blobs with a certain hue
             contours.findContours(filtered, 50, w*h/2, 1, false);
+            blobs = contours.nBlobs;
             
-            for (int i=0; i<contours.nBlobs; i++) {
-                if(mTarget->test(contours.blobs[i].centroid.x*sx, contours.blobs[i].centroid.y*sy))
-                {
-                    mTarget->hit();
+            if(showBall) // HACK disable for character testing.
+            {
+                for (int i=0; i<contours.nBlobs; i++) {
+                    if(mTarget->test(contours.blobs[i].centroid.x*sx, contours.blobs[i].centroid.y*sy))
+                    {
+                        mTarget->hit();
+                    }
                 }
             }
-            
         }
     }
 }
@@ -158,23 +182,32 @@ void ofApp::drawVideo()
     float dh = h*sy;
 
     //draw all cv images
-    rgb.draw(0, 0, dw, dh);
-    hsb.draw(dw,0, dw, dh);
+//    rgb.draw(0, 0, dw, dh);
     
-    filtered.draw(dw*2, 0, dw, dh);
-    contours.draw(dw*2, 0, dw, dh);
-    
-    hue.draw(dw*0, dh, dw, dh);
-    sat.draw(dw*1, dh, dw, dh);
-    bri.draw(dw*2, dh, dw, dh);
+    rgb.drawROI(0,0,dw,dh);
     
     
+    
+//    hsb.draw(dw,0, dw, dh);
+//    
+//    filtered.draw(dw*2, 0, dw, dh);
+//    contours.draw(dw*2, 0, dw, dh);
+//    
+//    hue.draw(dw*0, dh, dw, dh);
+//    sat.draw(dw*1, dh, dw, dh);
+//    bri.draw(dw*2, dh, dw, dh);
+    
+    
+    
+}
+
+void ofApp::drawBall()
+{
+    //draw red circles for found blobs
     ofSetColor(255, 0, 0);
     ofFill();
-    
-    //draw red circles for found blobs
     for (int i=0; i<contours.nBlobs; i++) {
-        
+        //cout << int(contours.blobs[i].centroid.x*sx) << ", " << int(contours.blobs[i].centroid.y*sy) << endl;
         ofDrawCircle(contours.blobs[i].centroid.x*sx, contours.blobs[i].centroid.y*sy, 20);
     }
 }
@@ -191,6 +224,10 @@ void ofApp::draw()
     if(showVideo)
     {
         drawVideo();
+    }
+    if(showBall)
+    {
+        drawBall();
     }
     if(showTarget)
     {
@@ -212,9 +249,17 @@ void ofApp::keyPressed(int key){
     {
         showVideo = !showVideo;
     }
+    else if(key == 'm')
+    {
+        mirror = !mirror;
+    }
     else if(key == 't')
     {
         showTarget = !showTarget;
+    }
+    else if(key == 'b')
+    {
+        showBall = !showBall;
     }
     else if(key == 'h')
     {
@@ -252,6 +297,7 @@ void ofApp::mousePressed(int x, int y, int button){
     
     //get hue value on mouse position
     findHue = hue.getPixels()[my*w+mx];
+    cout << findHue << endl;
 }
 
 //--------------------------------------------------------------

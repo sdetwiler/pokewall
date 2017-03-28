@@ -11,24 +11,14 @@
 Target::Target(char const* filename)
 {
     // TODO filename
-    mImage.load("007Squirtle.png");
-    mWidth = 475;
-    mHeight = 475;
-    mScaleX = 1.0;
-    mScaleY = 1.0;
-    mStartX = 0;
-    mStartY = 0;
-
-    mStartScaleX = 1.0;
-    mStartScaleY = 1.0;
-    mTargetScaleX = mStartScaleX;
-    mTargetScaleY = mStartScaleY;
+//    mImage.load("007Squirtle.png");
     
     mColor = ofColor(255,255,255);
     mStartColor = mColor;
     mTargetColor = mColor;
     
-    mState = Initial;
+    mSound.load("audio/catch.wav");
+    reload();
 }
 
 Target::~Target()
@@ -36,6 +26,21 @@ Target::~Target()
     
 }
 
+
+void Target::loadRandom()
+{
+    string path = "targets/";
+    ofDirectory dir(path);
+    //only show png files
+    dir.allowExt("png");
+    //populate the directory object
+    dir.listDir();
+    
+    int r = ofRandom(0, dir.size());
+    auto filename = dir.getPath(r);
+    cout << "filename: " << filename << endl;
+    mImage.load(filename);
+}
 
 bool Target::updateTransform()
 {
@@ -61,15 +66,51 @@ void Target::setState(State state)
 {
     mState = state;
     mStartTime = ofGetElapsedTimef();
+    cout << "state: " << mState << endl;
+}
+
+void Target::reload()
+{
+    mWidth = 475;
+    mHeight = 475;
+    mScaleX = 1.0;
+    mScaleY = 1.0;
+    mStartX = 0;
+    mStartY = -mHeight;
+    mTargetX = mStartX;
+    mTargetY = mStartY;
+    
+    mStartScaleX = 1.0;
+    mStartScaleY = 1.0;
+    mTargetScaleX = mStartScaleX;
+    mTargetScaleY = mStartScaleY;
+
+    
+    
+    mTargetColor = mStartColor = mColor = mStartColor = mTargetColor = ofColor(0,0,0);
+    loadRandom();
+
+    mStateDuration = 1.0;
+    mState = Reload;
+}
+void Target::updateReload()
+{
+    if(updateTransform())
+    {
+        setState(Initial);
+    }
 }
 
 void Target::updateInitial()
 {
-    mStartX = ofGetScreenWidth()/2 - mWidth/2;
+    float xPct = ofRandom(0.2, 0.75);
+    float yPct = ofRandom(0.5, 0.7);
+    mStartX = (ofGetScreenWidth()*xPct) - mWidth/2;
+    mTargetX = mStartX;
+
     mStartY = -mHeight;
-    mTargetX = ofGetScreenWidth()/2 - mWidth/2;
-    mTargetY = ofGetScreenHeight() - mHeight;
-    mStateDuration = 2.0;
+    mTargetY = ofGetScreenHeight()*yPct;
+    mStateDuration = 1.0;
     
     mStartScaleX = 1.0;
     mStartScaleY = 1.0;
@@ -80,6 +121,11 @@ void Target::updateInitial()
     mScaleY = 1.0;
     mColor = mStartColor = mTargetColor = ofColor(255,255,255);
 
+    cout << mStartX << "," << mStartY << endl;
+    cout << mTargetX << "," << mTargetY << endl;
+    cout << endl;
+    
+    
     setState(Entering);
 }
 
@@ -89,7 +135,7 @@ void Target::updateEntering()
     {
         mStartX = mTargetX;
         mStartY = mTargetY;
-        mTargetScaleY = 1.2;
+        mTargetScaleY = 0.95;
         mStateDuration = 1.0;
         
         setState(Idle);
@@ -118,7 +164,7 @@ void Target::updateHit()
 {
     if(updateTransform())
     {
-        setState(Initial);
+        reload();
     }
 }
 
@@ -126,6 +172,9 @@ void Target::update()
 {
     switch(mState)
     {
+        case Reload:
+            updateReload();
+            break;
         case Initial:
             updateInitial();
             break;
@@ -172,6 +221,7 @@ void Target::hit()
         mTargetScaleY = 3;
         mTargetColor = ofColor(255,0,0);
         setState(Hit);
+        mSound.play();
     }
 }
 
