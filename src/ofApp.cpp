@@ -69,6 +69,10 @@ void ofApp::setupPanel()
 void ofApp::setup(){
     ofBackground(0,0,0);
     
+    mFont.load("arial.ttf", 32);
+    
+    mTargetBounds = ofRectangle(0, 0, ofGetScreenWidth(), ofGetScreenHeight());
+    
     setupKinect();
     setupPanel();
     
@@ -88,9 +92,6 @@ void ofApp::setup(){
     bri.allocate(w, h);
     filtered.allocate(w, h);
     
-    
-    sx = 1.0;//0.5;
-    sy = 1.0;//0.5;
     
     mTarget = new Target("foo");
 
@@ -153,7 +154,13 @@ void ofApp::update(){
             if(showBall) // HACK disable for character testing.
             {
                 for (int i=0; i<contours.nBlobs; i++) {
-                    if(mTarget->test(contours.blobs[i].centroid.x*sx, contours.blobs[i].centroid.y*sy))
+                    mBall.set(contours.blobs[i].centroid.x, contours.blobs[i].centroid.y, 0);
+
+                    float sx = (mBall.x/mTargetBounds.width) * ofGetScreenWidth();
+                    float sy = (mBall.y/mTargetBounds.height) * ofGetScreenHeight();
+
+                    
+                    if(mTarget->test(sx, sy))
                     {
                         mTarget->hit();
                     }
@@ -178,13 +185,11 @@ void ofApp::drawVideo()
 {
     ofSetColor(255,255,255);
     
-    float dw = w*sx;
-    float dh = h*sy;
 
     //draw all cv images
 //    rgb.draw(0, 0, dw, dh);
     
-    rgb.drawROI(0,0,dw,dh);
+    rgb.drawROI(0,0,w,h);
     
     
     
@@ -203,13 +208,24 @@ void ofApp::drawVideo()
 
 void ofApp::drawBall()
 {
+    
+//    float sx = mBall.x;
+//    float sy = mBall.y;
+    float sx = (mBall.x/mTargetBounds.width) * ofGetScreenWidth();
+    float sy = (mBall.y/mTargetBounds.height) * ofGetScreenHeight();
+    
     //draw red circles for found blobs
-    ofSetColor(255, 0, 0);
     ofFill();
-    for (int i=0; i<contours.nBlobs; i++) {
-        //cout << int(contours.blobs[i].centroid.x*sx) << ", " << int(contours.blobs[i].centroid.y*sy) << endl;
-        ofDrawCircle(contours.blobs[i].centroid.x*sx, contours.blobs[i].centroid.y*sy, 20);
-    }
+    ofSetColor(255, 0, 0);
+    ofDrawCircle(sx, sy, 20);
+    ofSetColor(255,255,255);
+    
+    std::string label = std::to_string(int(sx)) + "," + std::to_string(int(sy));
+    mFont.drawString(label, sx, sy);
+    
+    ofNoFill();
+    ofSetColor(255,255,255);
+    ofDrawRectangle(mTargetBounds);
 }
 
 void ofApp::drawTarget()
@@ -265,6 +281,19 @@ void ofApp::keyPressed(int key){
     {
         mTarget->hit();
     }
+    
+    
+    else if(key == '1')
+    {
+        mTargetBounds.setX(mBall.x);
+        mTargetBounds.setY(mBall.y);
+    }
+    else if(key == '2')
+    {
+        mTargetBounds.setWidth(mBall.x);
+        mTargetBounds.setHeight(mBall.y);
+        
+    }
 }
 
 //--------------------------------------------------------------
@@ -292,8 +321,8 @@ void ofApp::mousePressed(int x, int y, int button){
     }
     
     //calculate local mouse x,y in image
-    int mx = int(x*(1/sx)) % w;
-    int my = int(y*(1/sy)) % h;
+    int mx = int(x) % w;
+    int my = int(y) % h;
     
     //get hue value on mouse position
     findHue = hue.getPixels()[my*w+mx];

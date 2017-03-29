@@ -45,8 +45,13 @@ private:
     float				fps;
     
     int w, h;
-    float sx, sy;
     int findHue;
+    
+    ofTrueTypeFont mFont;
+    
+    
+    ofRectangle mTargetBounds;
+    ofPoint mBall;
     
     vector < shared_ptr<ofxKinectV2> > kinects;
     
