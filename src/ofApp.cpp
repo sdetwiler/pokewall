@@ -41,9 +41,9 @@ void ofApp::setupPanel()
     panel.setup("settings");
     
     panel.add(showVideo.set("Show Video", false));
-    panel.add(showTarget.set("Show Target", false));
+    panel.add(showTarget.set("Show Target", true));
     panel.add(showBall.set("Show Ball", false));
-    panel.add(mirror.set("Mirror Video", false));
+    panel.add(mirror.set("Mirror Video", true));
     
     panel.add(panelFPS.set("FPS", 0, 0, 60));
     panel.add(blobs.set("Blobs", 0, 0, 60));
@@ -151,7 +151,7 @@ void ofApp::update(){
             contours.findContours(filtered, 50, w*h/2, 1, false);
             blobs = contours.nBlobs;
             
-            if(showBall) // HACK disable for character testing.
+            if(true || showBall) // HACK disable for character testing.
             {
                 for (int i=0; i<contours.nBlobs; i++) {
                     mBall.set(contours.blobs[i].centroid.x, contours.blobs[i].centroid.y, 0);

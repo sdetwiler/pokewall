@@ -17,7 +17,8 @@ Target::Target(char const* filename)
     mStartColor = mColor;
     mTargetColor = mColor;
     
-    mSound.load("audio/catch.wav");
+    mCatchSound.load("audio/catch.wav");
+    mEscapeSound.load("audio/escape.wav");
     reload();
 }
 
@@ -84,6 +85,7 @@ void Target::reload()
     mStartScaleY = 1.0;
     mTargetScaleX = mStartScaleX;
     mTargetScaleY = mStartScaleY;
+    mIdleCount = 0;
 
     
     
@@ -156,7 +158,16 @@ void Target::updateIdle()
             mStartScaleY = mTargetScaleY;
             mTargetScaleY = 1.05;
         }
-        setState(Idle);
+        
+        ++mIdleCount;
+        if(mIdleCount > 10)
+        {
+            escape();
+        }
+        else
+        {
+            setState(Idle);
+        }
     }
 }
 
@@ -167,6 +178,15 @@ void Target::updateHit()
         reload();
     }
 }
+
+void Target::updateEscape()
+{
+    if(updateTransform())
+    {
+        reload();
+    }
+}
+
 
 void Target::update()
 {
@@ -186,6 +206,9 @@ void Target::update()
             break;
         case Hit:
             updateHit();
+            break;
+        case Escape:
+            updateEscape();
             break;
     }
     
@@ -221,7 +244,19 @@ void Target::hit()
         mTargetScaleY = 3;
         mTargetColor = ofColor(255,0,0);
         setState(Hit);
-        mSound.play();
+        mCatchSound.play();
+    }
+}
+void Target::escape()
+{
+    if(mState == Idle)
+    {
+        mStateDuration = .150;
+        mTargetScaleX = 1;
+        mTargetScaleY = 3;
+        mTargetColor = ofColor(255,255,255);
+        setState(Escape);
+        mEscapeSound.play();
     }
 }
 

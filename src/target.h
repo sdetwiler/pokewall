@@ -17,7 +17,8 @@ enum State
     Initial,
     Entering,
     Idle,
-    Hit
+    Hit,
+    Escape
 };
 
 class Target
@@ -32,6 +33,7 @@ public:
     void update();
     
     void hit();
+    void escape();
     bool test(int screenX, int screenY);
     
 private:
@@ -44,13 +46,15 @@ private:
     void updateEntering();
     void updateIdle();
     void updateHit();
+    void updateEscape();
     
     bool updateTransform();
     
     void setState(State state);
     
     ofImage mImage;
-    ofSoundPlayer mSound;
+    ofSoundPlayer mCatchSound;
+    ofSoundPlayer mEscapeSound;
 
     
     float mWidth;
@@ -80,6 +84,7 @@ private:
     
     State mState;
 
+    int mIdleCount;
     
 };
 
