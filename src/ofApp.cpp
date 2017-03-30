@@ -72,6 +72,7 @@ void ofApp::setup(){
     mFont.load("arial.ttf", 32);
     
     mTargetBounds = ofRectangle(0, 0, ofGetScreenWidth(), ofGetScreenHeight());
+    mTargetBounds = ofRectangle(0, 0, 705, 513);
     
     setupKinect();
     setupPanel();
@@ -79,7 +80,7 @@ void ofApp::setup(){
     findHue = 178;  // Red ball.
     
     showVideo = false;
-    showTarget = false;
+    showTarget = true;
     w = 1920;
     h = 1080;
     
@@ -151,19 +152,17 @@ void ofApp::update(){
             contours.findContours(filtered, 50, w*h/2, 1, false);
             blobs = contours.nBlobs;
             
-            if(true || showBall) // HACK disable for character testing.
+            for (int i=0; i<contours.nBlobs; i++)
             {
-                for (int i=0; i<contours.nBlobs; i++) {
-                    mBall.set(contours.blobs[i].centroid.x, contours.blobs[i].centroid.y, 0);
+                mBall.set(contours.blobs[i].centroid.x, contours.blobs[i].centroid.y, 0);
 
-                    float sx = (mBall.x/mTargetBounds.width) * ofGetScreenWidth();
-                    float sy = (mBall.y/mTargetBounds.height) * ofGetScreenHeight();
+                float sx = (mBall.x/mTargetBounds.width) * ofGetScreenWidth();
+                float sy = (mBall.y/mTargetBounds.height) * ofGetScreenHeight();
 
-                    
-                    if(mTarget->test(sx, sy))
-                    {
-                        mTarget->hit();
-                    }
+                
+                if(mTarget->test(sx, sy))
+                {
+                    mTarget->hit();
                 }
             }
         }
